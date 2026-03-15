@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Stay | Eureka Place Hotel Kampala</title>
+    <meta name="description" content="Book your stay at Eureka Place Hotel & Suites in Ntinda, Kampala. Best rates guaranteed. Online reservation system.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #E31E24; --secondary: #F5A3A3; --accent: #B91C1C; --light: #fef2f2; --dark: #1a1a1a; --success: #16a34a; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: var(--dark); background: var(--light); }
+        
+        nav { background: var(--primary); padding: 1rem 0; position: fixed; width: 100%; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { color: white; font-size: 1.5rem; font-weight: bold; text-decoration: none; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { color: white; text-decoration: none; }
+        .nav-links a:hover { color: var(--secondary); }
+        
+        .hero { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 8rem 2rem 3rem; text-align: center; }
+        .hero h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        
+        .booking-container { max-width: 900px; margin: -2rem auto 3rem; padding: 0 2rem; position: relative; z-index: 10; }
+        .booking-card { background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden; }
+        
+        .progress-bar { display: flex; background: var(--light); border-bottom: 1px solid #eee; }
+        .progress-step { flex: 1; padding: 1.5rem 1rem; text-align: center; font-weight: 600; color: #999; }
+        .progress-step.active { color: var(--primary); background: white; }
+        .progress-step.completed { color: var(--success); }
+        .step-number { display: inline-block; width: 28px; height: 28px; border-radius: 50%; background: #ddd; color: white; line-height: 28px; margin-right: 0.5rem; font-size: 0.9rem; }
+        .progress-step.active .step-number { background: var(--primary); }
+        .progress-step.completed .step-number { background: var(--success); }
+        
+        .form-section { padding: 2.5rem; display: none; }
+        .form-section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .section-title { font-size: 1.5rem; color: var(--primary); margin-bottom: 1.5rem; }
+        
+        .date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .date-input-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555; }
+        .date-input-group input { width: 100%; padding: 1rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; }
+        .date-input-group input:focus { outline: none; border-color: var(--primary); }
+        
+        .stay-summary { background: var(--light); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; }
+        .stay-summary h3 { color: var(--primary); margin-bottom: 1rem; font-size: 1.1rem; }
+        .summary-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
+        .summary-row:last-child { border-bottom: none; font-weight: bold; color: var(--primary); font-size: 1.1rem; }
+        
+        .room-options { display: grid; gap: 1.5rem; }
+        .room-option { border: 2px solid #e0e0e0; border-radius: 15px; padding: 1.5rem; cursor: pointer; transition: all 0.3s; display: grid; grid-template-columns: 120px 1fr auto; gap: 1.5rem; align-items: center; }
+        .room-option:hover { border-color: var(--secondary); }
+        .room-option.selected { border-color: var(--primary); background: var(--light); }
+        .room-option input[type="radio"] { display: none; }
+        .room-thumb { width: 120px; height: 80px; border-radius: 10px; object-fit: cover; }
+        .room-thumb-placeholder { width: 120px; height: 80px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+        .room-details h4 { color: var(--primary); margin-bottom: 0.3rem; }
+        .room-details p { color: #666; font-size: 0.9rem; }
+        .room-price-tag { text-align: right; }
+        .room-price-tag .price { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        .room-price-tag .per-night { color: #999; font-size: 0.85rem; }
+        .select-btn { display: inline-block; margin-top: 0.5rem; padding: 0.5rem 1.5rem; background: var(--primary); color: white; border-radius: 25px; font-size: 0.9rem; }
+        .room-option.selected .select-btn { background: var(--success); }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 1rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        
+        .guest-counter { display: flex; align-items: center; gap: 1rem; }
+        .guest-counter button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary); background: white; color: var(--primary); font-size: 1.2rem; cursor: pointer; }
+        .guest-counter button:hover { background: var(--primary); color: white; }
+        .guest-counter span { font-size: 1.2rem; font-weight: bold; min-width: 30px; text-align: center; }
+        
+        .form-actions { display: flex; justify-content: space-between; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #eee; }
+        .btn { padding: 1rem 2.5rem; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border: none; text-decoration: none; display: inline-block; }
+        .btn-secondary { background: #e0e0e0; color: #666; }
+        .btn-secondary:hover { background: #d0d0d0; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--accent); transform: translateY(-2px); box-shadow: 0 5px 20px rgba(227, 30, 36, 0.3); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #15803d; }
+        
+        .confirmation { text-align: center; padding: 3rem; }
+        .confirmation-icon { font-size: 5rem; margin-bottom: 1.5rem; }
+        .confirmation h2 { color: var(--success); font-size: 2rem; margin-bottom: 1rem; }
+        .booking-reference { background: var(--light); padding: 1.5rem; border-radius: 10px; margin: 2rem 0; }
+        .booking-reference .ref-number { font-size: 1.5rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; }
+        
+        .error-message { background: #fee2e2; color: #dc2626; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; display: none; }
+        .error-message.show { display: block; }
+        
+        footer { background: var(--dark); color: white; padding: 3rem 2rem 1rem; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+        .footer-section h3 { color: var(--secondary); margin-bottom: 1rem; }
+        .footer-bottom { text-align: center; padding-top: 2rem; border-top: 1px solid #333; color: #888; }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.8rem; }
+            .nav-links { display: none; }
+            .date-grid, .form-grid { grid-template-columns: 1fr; }
+            .room-option { grid-template-columns: 1fr; text-align: center; }
+            .room-thumb, .room-thumb-placeholder { width: 100%; height: 150px; }
+            .form-section { padding: 1.5rem; }
+            .progress-step span { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">🏨 Eureka Place</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#rooms">Rooms</a></li>
+                <li><a href="booking.html" style="color: var(--secondary);">Book Now</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>Book Your Stay</h1>
+        <p>Reserve your room at Eureka Place Hotel & Suites</p>
+    </header>
+
+    <div class="booking-container">
+        <div class="booking-card">
+            <div class="progress-bar">
+                <div class="progress-step active" id="step1-indicator">
+                    <span class="step-number">1</span>
+                    <span>Dates</span>
+                </div>
+                <div class="progress-step" id="step2-indicator">
+                    <span class="step-number">2</span>
+                    <span>Room</span>
+                </div>
+                <div class="progress-step" id="step3-indicator">
+                    <span class="step-number">3</span>
+                    <span>Details</span>
+                </div>
+                <div class="progress-step" id="step4-indicator">
+                    <span class="step-number">4</span>
+                    <span>Confirm</span>
+                </div>
+            </div>
+
+            <form id="booking-form" action="https://formspree.io/f/xnqevwja" method="POST">
+                <div class="form-section active" id="step1">
+                    <h2 class="section-title">Select Your Dates</h2>
+                    <div class="error-message" id="date-error">Please select valid check-in and check-out dates.</div>
+                    
+                    <div class="date-grid">
+                        <div class="date-input-group">
+                            <label for="checkin">Check-in Date</label>
+                            <input type="date" id="checkin" name="checkin" required>
+                        </div>
+                        <div class="date-input-group">
+                            <label for="checkout">Check-out Date</label>
+                            <input type="date" id="checkout" name="checkout" required>
+                        </div>
+                    </div>
+
+                    <div class="stay-summary" id="stay-summary" style="display: none;">
+                        <h3>📅 Stay Summary</h3>
+                        <div class="summary-row">
+                            <span>Check-in:</span>
+                            <span id="summary-checkin">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Check-out:</span>
+                            <span id="summary-checkout">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Duration:</span>
+                            <span id="summary-nights">-</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="index.html" class="btn btn-secondary">← Back to Home</a>
+                        <button type="button" class="btn btn-primary" onclick="goToStep(2)">Continue →</button>
+                    </div>
+                </div>
+
+                <div class="form-section" id="step2">
+                    <h2 class="section-title">Choose Your Room</h2>
+                    <div class="error-message" id="room-error">Please select a room type.</div>
+                    
+                    <div class="room-options">
+                        <label class="room-option" onclick="selectRoom('standard', 36)">
+                            <input type="radio" name="room_type" value="Standard Room" id="room-standard">
+                            <img src="standard-room.jpg" alt="Standard Room" class="room-thumb">
+                            <div class="room-details">
+                                <h4>Standard Room</h4>
+                                <p>Comfortable room with AC, TV, WiFi, private bathroom</p>
+                            </div>
+                            <div class="room-price-tag">
+                                <div class="price">$36</div>
+                                <div class="per-night">per night</div>
+                                <span class="select-btn">Select</span>
+                            </div>
+                        </label>
+
+                        <label class="room-option" onclick="selectRoom('deluxe', 55)">
+                            <input type="radio" name="room_type" value="Deluxe Room" id="room-deluxe">
+                            <div class="room-thumb-placeholder">🛏️🛏️</div>
+                            <div class="room-details">
+                                <h4>Deluxe Room</h4>
+                                <p>Spacious layout with premium bedding</p>
+                            </div>
+                            <div class="room-price-tag">
+                                <div class="price">$55</div>
+                                <div class="per-night">per night</div>
+                                <span class="select-btn">Select</span>
+                            </div>
+                        </label>
+
+                        <label class="room-option" onclick="selectRoom('suite', 85)">
+                            <input type="radio" name="room_type" value="Family Suite" id="room-suite">
+                            <div class="room-thumb-placeholder">👑</div>
+                            <div class="room-details">
+                                <h4>Family Suite</h4>
+                                <p>Multiple rooms with living area</p>
+                            </div>
+                            <div class="room-price-tag">
+                                <div class="price">$85</div>
+                                <div class="per-night">per night</div>
+                                <span class="select-btn">Select</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <input type="hidden" name="room_price" id="room-price-input">
+                    <input type="hidden" name="total_nights" id="total-nights-input">
+                    <input type="hidden" name="total_price" id="total-price-input">
+
+                    <div class="stay-summary" style="margin-top: 2rem;">
+                        <h3>💰 Pricing Summary</h3>
+                        <div class="summary-row">
+                            <span>Room:</span>
+                            <span id="price-room">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Nights:</span>
+                            <span id="price-nights">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="price-subtotal">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Taxes & Fees (18%):</span>
+                            <span id="price-tax">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total:</span>
+                            <span id="price-total">-</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+                        <button type="button" class="btn btn-primary" onclick="goToStep(3)">Continue →</button>
+                    </div>
+                </div>
+
+                <div class="form-section" id="step3">
+                    <h2 class="section-title">Guest Information</h2>
+                    <div class="error-message" id="details-error">Please fill in all required fields.</div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="firstname">First Name *</label>
+                            <input type="text" id="firstname" name="firstname" required placeholder="John">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastname">Last Name *</label>
+                            <input type="text" id="lastname" name="lastname" required placeholder="Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" name="email" required placeholder="john@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number *</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="+256 700 000 000">
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country *</label>
+                            <select id="country" name="country" required>
+                                <option value="">Select Country</option>
+                                <option value="Uganda">Uganda</option>
+                                <option value="Kenya">Kenya</option>
+                                <option value="Tanzania">Tanzania</option>
+                                <option value="Rwanda">Rwanda</option>
+                                <option value="Nigeria">Nigeria</option>
+                                <option value="South Africa">South Africa</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="United States">United States</option>
+                                <option value="Germany">Germany</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Number of Guests *</label>
+                            <div class="guest-counter">
+                                <button type="button" onclick="adjustGuests(-1)">−</button>
+                                <span id="guest-count">1</span>
+                                <button type="button" onclick="adjustGuests(1)">+</button>
+                            </div>
+                            <input type="hidden" name="guests" id="guests-input" value="1">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="requests">Special Requests (Optional)</label>
+                            <textarea id="requests" name="requests" placeholder="Any special requirements..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+                        <button type="button" class="btn btn-primary" onclick="goToStep(4)">Review Booking →</button>
+                    </div>
+                </div>
+
+                <div class="form-section" id="step4">
+                    <h2 class="section-title">Review Your Booking</h2>
+                    
+                    <div class="stay-summary">
+                        <h3>📋 Booking Details</h3>
+                        <div class="summary-row">
+                            <span>Guest:</span>
+                            <span id="confirm-name">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Email:</span>
+                            <span id="confirm-email">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Phone:</span>
+                            <span id="confirm-phone">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Check-in:</span>
+                            <span id="confirm-checkin">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Check-out:</span>
+                            <span id="confirm-checkout">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Room Type:</span>
+                            <span id="confirm-room">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Guests:</span>
+                            <span id="confirm-guests">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Amount:</span>
+                            <span id="confirm-total" style="color: var(--primary); font-size: 1.2rem;">-</span>
+                        </div>
+                    </div>
+
+                    <p style="color: #666; margin-bottom: 1.5rem; text-align: center;">
+                        By confirming, you agree to our booking terms. Payment will be processed at check-in.
+                    </p>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+                        <button type="submit" class="btn btn-success">✓ Confirm Booking</button>
+                    </div>
+                </div>
+
+                <div class="form-section confirmation" id="success-message" style="display: none;">
+                    <div class="confirmation-icon">🎉</div>
+                    <h2>Booking Request Received!</h2>
+                    <p>Thank you for choosing Eureka Place Hotel. We will contact you shortly to confirm your reservation.</p>
+                    <div class="booking-reference">
+                        <p>Your Reference Number:</p>
+                        <div class="ref-number" id="ref-number">EPH-XXXXXX</div>
+                    </div>
+                    <a href="index.html" class="btn btn-primary" style="margin-top: 1.5rem;">Return to Home</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Eureka Place Hotel</h3>
+                <p style="color: #aaa;">Your trusted hotel in Ntinda, Kampala.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p style="color: #aaa;">📞 +256 783 800 808</p>
+                <p style="color: #aaa;">✉️ info@eurekauganda.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Eureka Place Hotel & Suites. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('checkin').min = today;
+        document.getElementById('checkout').min = today;
+
+        let currentStep = 1;
+        let selectedRoom = null;
+        let roomPrice = 0;
+        let totalNights = 0;
+
+        document.getElementById('checkin').addEventListener('change', calculateNights);
+        document.getElementById('checkout').addEventListener('change', calculateNights);
+
+        function goToStep(step) {
+            if (step > currentStep && !validateStep(currentStep)) return;
+
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + step).classList.add('active');
+            updateProgressBar(step);
+            if (step === 4) updateConfirmation();
+            currentStep = step;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateProgressBar(step) {
+            for (let i = 1; i <= 4; i++) {
+                const indicator = document.getElementById('step' + i + '-indicator');
+                indicator.classList.remove('active', 'completed');
+                if (i < step) {
+                    indicator.classList.add('completed');
+                    indicator.querySelector('.step-number').textContent = '✓';
+                } else if (i === step) {
+                    indicator.classList.add('active');
+                    indicator.querySelector('.step-number').textContent = i;
+                } else {
+                    indicator.querySelector('.step-number').textContent = i;
+                }
+            }
+        }
+
+        function validateStep(step) {
+            if (step === 1) {
+                const checkin = document.getElementById('checkin').value;
+                const checkout = document.getElementById('checkout').value;
+                if (!checkin || !checkout) {
+                    document.getElementById('date-error').classList.add('show');
+                    return false;
+                }
+                if (new Date(checkout) <= new Date(checkin)) {
+                    document.getElementById('date-error').textContent = 'Check-out must be after check-in.';
+                    document.getElementById('date-error').classList.add('show');
+                    return false;
+                }
+                document.getElementById('date-error').classList.remove('show');
+                return true;
+            }
+
+            if (step === 2) {
+                if (!selectedRoom) {
+                    document.getElementById('room-error').classList.add('show');
+                    return false;
+                }
+                document.getElementById('room-error').classList.remove('show');
+                return true;
+            }
+
+            if (step === 3) {
+                const required = ['firstname', 'lastname', 'email', 'phone', 'country'];
+                for (let field of required) {
+                    if (!document.getElementById(field).value.trim()) {
+                        document.getElementById('details-error').classList.add('show');
+                        return false;
+                    }
+                }
+                document.getElementById('details-error').classList.remove('show');
+                return true;
+            }
+            return true;
+        }
+
+        function calculateNights() {
+            const checkin = new Date(document.getElementById('checkin').value);
+            const checkout = new Date(document.getElementById('checkout').value);
+            
+            if (checkin && checkout && checkout > checkin) {
+                const diffTime = Math.abs(checkout - checkin);
+                totalNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                document.getElementById('stay-summary').style.display = 'block';
+                document.getElementById('summary-checkin').textContent = checkin.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                document.getElementById('summary-checkout').textContent = checkout.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                document.getElementById('summary-nights').textContent = totalNights + ' night' + (totalNights > 1 ? 's' : '');
+                document.getElementById('total-nights-input').value = totalNights;
+                
+                const nextDay = new Date(checkin);
+                nextDay.setDate(nextDay.getDate() + 1);
+                document.getElementById('checkout').min = nextDay.toISOString().split('T')[0];
+                
+                updatePricing();
+            }
+        }
+
+        function selectRoom(type, price) {
+            selectedRoom = type;
+            roomPrice = price;
+            document.querySelectorAll('.room-option').forEach(o => o.classList.remove('selected'));
+            document.getElementById('room-' + type).closest('.room-option').classList.add('selected');
+            document.getElementById('room-' + type).checked = true;
+            document.getElementById('room-price-input').value = price;
+            document.getElementById('room-error').classList.remove('show');
+            updatePricing();
+        }
+
+        function updatePricing() {
+            if (totalNights && roomPrice) {
+                const subtotal = totalNights * roomPrice;
+                const tax = subtotal * 0.18;
+                const total = subtotal + tax;
+                
+                document.getElementById('price-room').textContent = '$' + roomPrice + '/night';
+                document.getElementById('price-nights').textContent = totalNights;
+                document.getElementById('price-subtotal').textContent = '$' + subtotal.toFixed(2);
+                document.getElementById('price-tax').textContent = '$' + tax.toFixed(2);
+                document.getElementById('price-total').textContent = '$' + total.toFixed(2);
+                document.getElementById('total-price-input').value = total.toFixed(2);
+            }
+        }
+
+        function adjustGuests(delta) {
+            const countEl = document.getElementById('guest-count');
+            let count = parseInt(countEl.textContent) + delta;
+            if (count < 1) count = 1;
+            if (count > 10) count = 10;
+            countEl.textContent = count;
+            document.getElementById('guests-input').value = count;
+        }
+
+        function updateConfirmation() {
+            document.getElementById('confirm-name').textContent = document.getElementById('firstname').value + ' ' + document.getElementById('lastname').value;
+            document.getElementById('confirm-email').textContent = document.getElementById('email').value;
+            document.getElementById('confirm-phone').textContent = document.getElementById('phone').value;
+            document.getElementById('confirm-checkin').textContent = new Date(document.getElementById('checkin').value).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('confirm-checkout').textContent = new Date(document.getElementById('checkout').value).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('confirm-room').textContent = document.querySelector('input[name="room_type"]:checked')?.value || '-';
+            document.getElementById('confirm-guests').textContent = document.getElementById('guests-input').value;
+            document.getElementById('confirm-total').textContent = document.getElementById('price-total').textContent;
+        }
+
+        document.getElementById('booking-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const refNum = 'EPH-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            document.getElementById('ref-number').textContent = refNum;
+            
+            const formData = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            }).then(() => {
+                document.querySelectorAll('.form-section').forEach(s => s.style.display = 'none');
+                document.getElementById('success-message').style.display = 'block';
+                document.querySelector('.progress-bar').style.display = 'none';
+            }).catch(() => {
+                alert('Booking submitted! We will contact you shortly.');
+            });
+        });
+    </script>
+</body>
+</html>
