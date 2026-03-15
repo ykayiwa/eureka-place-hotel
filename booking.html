@@ -858,3 +858,163 @@ ById('room-error').classList.add('show'); return false; }
     </script>
 </body>
 </html>
+ElementById('checkout').value;
+                if (!ci || !co || new Date(co) <= new Date(ci)) {
+                    document.getElementById('date-error').classList.add('show');
+                    return false;
+                }
+                document.getElementById('date-error').classList.remove('show');
+                return true;
+            }
+            if (step === 2) {
+                if (!selectedRoom) { document.getElementById('room-error').classList.add('show'); return false; }
+                document.getElementById('room-error').classList.remove('show');
+                return true;
+            }
+            if (step === 3) {
+                const req = ['firstname', 'lastname', 'email', 'phone', 'country'];
+                for (let f of req) {
+                    if (!document.getElementById(f).value.trim()) {
+                        document.getElementById('details-error').classList.add('show');
+                        return false;
+                    }
+                }
+                document.getElementById('details-error').classList.remove('show');
+                return true;
+            }
+            return true;
+        }
+
+        function calculateNights() {
+            const ci = new Date(document.getElementById('checkin').value);
+            const co = new Date(document.getElementById('checkout').value);
+            if (ci && co && co > ci) {
+                const diff = Math.abs(co - ci);
+                totalNights = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                document.getElementById('stay-summary').style.display = 'block';
+                document.getElementById('summary-checkin').textContent = ci.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                document.getElementById('summary-checkout').textContent = co.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                document.getElementById('summary-nights').textContent = totalNights + ' night' + (totalNights > 1 ? 's' : '');
+                const nextDay = new Date(ci);
+                nextDay.setDate(nextDay.getDate() + 1);
+                document.getElementById('checkout').min = nextDay.toISOString().split('T')[0];
+                updatePricing();
+            }
+        }
+
+        function selectRoom(type, price) {
+            selectedRoom = type;
+            roomPrice = price;
+            document.querySelectorAll('.room-option').forEach(o => o.classList.remove('selected'));
+            document.getElementById('room-' + type).closest('.room-option').classList.add('selected');
+            document.getElementById('room-' + type).checked = true;
+            document.getElementById('room-error').classList.remove('show');
+            updatePricing();
+        }
+
+        function updatePricing() {
+            if (totalNights && roomPrice) {
+                const sub = totalNights * roomPrice;
+                const tax = sub * 0.18;
+                const total = sub + tax;
+                document.getElementById('price-room').textContent = '$' + roomPrice + '/night';
+                document.getElementById('price-nights').textContent = totalNights;
+                document.getElementById('price-subtotal').textContent = '$' + sub.toFixed(2);
+                document.getElementById('price-tax').textContent = '$' + tax.toFixed(2);
+                document.getElementById('price-total').textContent = '$' + total.toFixed(2);
+            }
+        }
+
+        function adjustGuests(delta) {
+            const el = document.getElementById('guest-count');
+            let count = parseInt(el.textContent) + delta;
+            if (count < 1) count = 1;
+            if (count > 10) count = 10;
+            el.textContent = count;
+        }
+
+        function updateConfirmation() {
+            document.getElementById('confirm-name').textContent = document.getElementById('firstname').value + ' ' + document.getElementById('lastname').value;
+            document.getElementById('confirm-email').textContent = document.getElementById('email').value;
+            document.getElementById('confirm-phone').textContent = document.getElementById('phone').value;
+            document.getElementById('confirm-checkin').textContent = new Date(document.getElementById('checkin').value).toLocaleDateString();
+            document.getElementById('confirm-checkout').textContent = new Date(document.getElementById('checkout').value).toLocaleDateString();
+            document.getElementById('confirm-room').textContent = document.querySelector('input[name="room_type"]:checked')?.value || '-';
+            document.getElementById('confirm-guests').textContent = document.getElementById('guest-count').textContent;
+            document.getElementById('confirm-total').textContent = document.getElementById('price-total').textContent;
+        }
+
+        function selectPayment(method) {
+            selectedPayment = method;
+            document.querySelectorAll('.payment-method').forEach(p => p.classList.remove('selected'));
+            document.getElementById('payment-' + method).closest('.payment-method').classList.add('selected');
+            document.getElementById('payment-' + method).checked = true;
+            document.getElementById('payment-error').classList.remove('show');
+            document.getElementById('stripe-form').classList.remove('show');
+            document.getElementById('mtn-form').classList.remove('show');
+            document.getElementById('airtel-form').classList.remove('show');
+            if (method === 'stripe') document.getElementById('stripe-form').classList.add('show');
+            if (method === 'mtn') document.getElementById('mtn-form').classList.add('show');
+            if (method === 'airtel') document.getElementById('airtel-form').classList.add('show');
+        }
+
+        function initStripe() {
+            if (cardElement) return;
+            const elements = stripe.elements();
+            cardElement = elements.create('card', { style: { base: { fontSize: '16px' } } });
+            cardElement.mount('#card-element');
+            cardElement.on('change', function(event) {
+                document.getElementById('card-errors').textContent = event.error ? event.error.message : '';
+            });
+        }
+
+        async function processPayment() {
+            if (!selectedPayment) {
+                document.getElementById('payment-error').classList.add('show');
+                return;
+            }
+            document.getElementById('processing').classList.add('show');
+            const btn = document.getElementById('pay-button');
+            btn.disabled = true;
+            await new Promise(r => setTimeout(r, 1500));
+            if (selectedPayment === 'stripe') {
+                document.getElementById('processing-text').textContent = 'Processing card...';
+                await new Promise(r => setTimeout(r, 2000));
+            } else if (selectedPayment === 'mtn') {
+                document.getElementById('processing-text').textContent = 'Sending MTN prompt...';
+                await new Promise(r => setTimeout(r, 2000));
+                document.getElementById('processing-text').textContent = 'Waiting for PIN...';
+                await new Promise(r => setTimeout(r, 2000));
+            } else if (selectedPayment === 'airtel') {
+                document.getElementById('processing-text').textContent = 'Sending Airtel prompt...';
+                await new Promise(r => setTimeout(r, 2000));
+                document.getElementById('processing-text').textContent = 'Waiting for PIN...';
+                await new Promise(r => setTimeout(r, 2000));
+            }
+            document.getElementById('processing').classList.remove('show');
+            const ref = 'EPH-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            document.getElementById('ref-number').textContent = ref;
+            document.querySelectorAll('.form-section').forEach(s => s.style.display = 'none');
+            document.getElementById('success-message').style.display = 'block';
+            document.querySelector('.progress-bar').style.display = 'none';
+            fetch('https://formspree.io/f/xnqevwja', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ref: ref,
+                    name: document.getElementById('firstname').value + ' ' + document.getElementById('lastname').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    room: document.querySelector('input[name="room_type"]:checked')?.value,
+                    checkin: document.getElementById('checkin').value,
+                    checkout: document.getElementById('checkout').value,
+                    guests: document.getElementById('guest-count').textContent,
+                    total: document.getElementById('price-total').textContent,
+                    payment: selectedPayment.toUpperCase(),
+                    status: 'PAID (DEMO)'
+                })
+            });
+        }
+    </script>
+</body>
+</html>
